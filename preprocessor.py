@@ -45,12 +45,19 @@ def preprocess(data):
 
     # make 12-hour period labels with AM/PM
     period = []
-    for hour in df['hour']:
-        start = pd.Timestamp(hour=hour, minute=0).strftime("%I%p")
-        end_hour = (hour + 1) % 24
-        end = pd.Timestamp(hour=end_hour, minute=0).strftime("%I%p")
-        period.append(f"{start}-{end}")
 
+    for hour in df['hour']:
+        try:
+            # If hour is valid number → build period normally
+            h = int(hour)
+            start = pd.Timestamp(hour=h, minute=0).strftime("%I%p")
+            end_h = (h + 1) % 24
+            end = pd.Timestamp(hour=end_h, minute=0).strftime("%I%p")
+            period.append(f"{start}-{end}")
+        except:
+            # If hour is invalid → fallback period
+            period.append("Unknown")
+    
     df['period'] = period
 
     return df
