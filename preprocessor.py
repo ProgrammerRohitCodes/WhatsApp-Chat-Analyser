@@ -48,7 +48,7 @@ def preprocess(data):
 
     for hour in df['hour']:
         try:
-            # If hour is valid number → build period normally
+            # If hour is valid → normal period
             h = int(hour)
             start = pd.Timestamp(hour=h, minute=0).strftime("%I%p")
             end_h = (h + 1) % 24
@@ -57,7 +57,7 @@ def preprocess(data):
         except:
             # If hour is invalid → fallback period
             period.append("Unknown")
-    
+
     df['period'] = period
 
     return df
