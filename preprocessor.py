@@ -9,14 +9,16 @@ def preprocess(data):
         messages = re.split(pattern, data)[1:]
         dates = re.findall(pattern, data)
         df = pd.DataFrame({'user_message': messages, 'message_date': dates})
-        df['message_date'] = pd.to_datetime(df['message_date'], format='%d/%m/%Y, %I:%M %p - ')
+        df['message_date'] = pd.to_datetime(df['message_date'],
+                                            format='%d/%m/%Y, %I:%M %p - ')
     except ValueError:
         # fallback (some exports don’t have AM/PM)
         pattern = r'\d{1,2}/\d{1,2}/\d{2,4},\s\d{1,2}:\d{2}\s-\s'
         messages = re.split(pattern, data)[1:]
         dates = re.findall(pattern, data)
         df = pd.DataFrame({'user_message': messages, 'message_date': dates})
-        df['message_date'] = pd.to_datetime(df['message_date'], format='%d/%m/%Y, %H:%M - ')
+        df['message_date'] = pd.to_datetime(df['message_date'],
+                                            format='%d/%m/%Y, %H:%M - ')
 
     df.rename(columns={'message_date': 'date'}, inplace=True)
 
@@ -48,14 +50,21 @@ def preprocess(data):
 
     for hour in df['hour']:
         try:
-            # If hour is valid → normal period
             h = int(hour)
-            start = pd.Timestamp(hour=h, minute=0).strftime("%I%p")
-            end_h = (h + 1) % 24
-            end = pd.Timestamp(hour=end_h, minute=0).strftime("%I%p")
-            period.append(f"{start}-{end}")
+            if h < 0 or h > 23:
+                period.append("Unknown")
+                continue
+
+            def fmt(x):
+                suf = "AM" if x < 12 else "PM"
+                x12 = x % 12
+                if x12 == 0:
+                    x12 = 12
+                return f"{x12:02d}{suf}"
+
+            period.append(f"{fmt(h)}-{fmt((h + 1) % 24)}")
+
         except:
-            # If hour is invalid → fallback period
             period.append("Unknown")
 
     df['period'] = period
